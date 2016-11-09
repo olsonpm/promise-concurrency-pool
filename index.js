@@ -23,7 +23,7 @@ const { defImmutableProps, invoke, mutableAssoc } = rUtils;
 // Main //
 //------//
 
-const create = ({ size, onSettled }) => {
+const create = ({ size, onSettled = r.always(undefined) }) => {
   const promisePool = getPromisePool(size)
     , promiseFnFifo = []
     ;

@@ -41,12 +41,13 @@ myPool.add(wait(15).thenLog('third').fn)
 `require('promise-concurrency-pool')` returns an object with a single
 property `create`.
 
-`create(opts) -> pool`
+`create(argsObj) -> pool`
 
-where `opts` is an object with the properties
+where `argsObj` is an object with the properties
 
 ```
 size <int>
+ *required
  - the size of the pool
 
 onSettled <function>
@@ -57,6 +58,7 @@ onSettled <function>
 and `pool` is an object with the properties
 ```
 add(promiseFn) -> pool
+ *chainable
  - 'promiseFn' is a 'promise-returning-function'
  - adds promiseFn to a queue.  When a promise in the pool finishes, it grabs one
    from this queue until empty.
