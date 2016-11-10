@@ -28,12 +28,12 @@ const create = ({ size, onSettled = r.always(undefined) }) => {
     , promiseFnFifo = []
     ;
 
-  const api = { onSettled };
+  const pool = { onSettled };
 
   return defImmutableProps(
-    api
+    pool
     , [
-      ['add', createAdd({ promisePool, api, promiseFnFifo })]
+      ['add', createAdd({ promisePool, pool, promiseFnFifo })]
       , ['size', size]
     ]
   );
@@ -51,39 +51,39 @@ function getPromisePool(size) {
   )(size);
 }
 
-function createAdd({ promisePool, api, promiseFnFifo }) {
-  const placeInPool = createPlaceInPool({ promisePool, api, promiseFnFifo });
+function createAdd({ promisePool, pool, promiseFnFifo }) {
+  const placeInPool = createPlaceInPool({ promisePool, pool, promiseFnFifo });
   return aPromiseFn => {
     const availableIndex = r.findIndex(r.complement(invoke('isPending')), promisePool);
 
     if (availableIndex === -1) promiseFnFifo.push(aPromiseFn);
     else placeInPool(availableIndex, aPromiseFn);
 
-    return api;
+    return pool;
   };
 }
 
-function createPlaceInPool({ promisePool, api, promiseFnFifo }) {
+function createPlaceInPool({ promisePool, pool, promiseFnFifo }) {
   const setPoolAt = mutableAssoc(r.__, r.__, promisePool)
-    , callFifoNothingOrEmpty = createCallFifoNothingOrEmpty({ promisePool, api, promiseFnFifo })
+    , callFifoNothingOrSettled = createCallFifoNothingOrSettled({ promisePool, pool, promiseFnFifo })
     ;
 
   return (availableIndex, aPromiseFn) => {
     setPoolAt(
       availableIndex
-      , aPromiseFn().then(callFifoNothingOrEmpty)
+      , aPromiseFn().then(callFifoNothingOrSettled)
     );
   };
 }
 
-function createCallFifoNothingOrEmpty({ promisePool, api, promiseFnFifo }) {
-  return callFifoNothingOrEmpty;
+function createCallFifoNothingOrSettled({ promisePool, pool, promiseFnFifo }) {
+  return callFifoNothingOrSettled;
 
-  function callFifoNothingOrEmpty() {
+  function callFifoNothingOrSettled() {
     let res;
 
-    if (promiseFnFifo.length) res = promiseFnFifo.shift()().then(callFifoNothingOrEmpty);
-    else if (r.filter(invoke('isPending'), promisePool).length === 1) res = api.onSettled();
+    if (promiseFnFifo.length) res = promiseFnFifo.shift()().then(callFifoNothingOrSettled);
+    else if (r.filter(invoke('isPending'), promisePool).length === 1) res = pool.onSettled();
 
     return res;
   }
