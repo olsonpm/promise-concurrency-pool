@@ -12,7 +12,9 @@ const r = require('ramda');
 // Init //
 //------//
 
-const spreadLast = createSpreadLast();
+const hasKey = createHasKey()
+  , spreadLast = createSpreadLast()
+  ;
 
 
 //------//
@@ -35,8 +37,16 @@ const defImmutableProps = r.curry(
   )
 );
 
+const get = r.curry(
+  (key, obj) => hasKey(key, obj)
+    ? obj[key]
+    : undefined
+);
+
 const invoke = r.curry(
-  (prop, obj) => r.pipe(r.prop, r.bind(r.__, obj), r.call)(prop, obj)
+  (key, obj) => r.is(Function, get(key, obj))
+    ? obj[key]()
+    : undefined
 );
 
 const mutableAssoc = r.curry(
@@ -54,12 +64,20 @@ function createSpreadLast() {
   );
 }
 
+function createHasKey() {
+  return r.curry(
+    (key, obj) => r.is(Object, obj)
+      ? !!obj[key]
+      : undefined
+  );
+}
+
 
 //---------//
 // Exports //
 //---------//
 
 module.exports = {
-  defAnImmutableProp, defAProp, defImmutableProps, invoke, mutableAssoc
-  , spreadLast 
+  defAnImmutableProp, defAProp, defImmutableProps, get, hasKey, invoke
+  , mutableAssoc, spreadLast
 };
